@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Estoque de Materiais de Limpeza</title>
+    <!-- Tailwind CSS CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Light gray background */
+        }
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #e2e8f0; /* Light gray track */
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8; /* Gray thumb */
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b; /* Darker gray on hover */
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 flex flex-col items-center min-h-screen">
+    <!-- Main container for the application -->
+    <div class="bg-white p-6 md:p-8 rounded-lg shadow-xl w-full max-w-4xl border border-gray-200">
+        <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-6 text-center">
+            Controle de Estoque de Materiais de Limpeza
+        </h1>
+
+        <!-- Section for adding new items -->
+        <div class="mb-8 p-6 bg-blue-50 rounded-lg border border-blue-200 shadow-md">
+            <h2 class="text-2xl font-semibold text-blue-700 mb-4">Adicionar Novo Material</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                <!-- Input field for Material Code -->
+                <div>
+                    <label for="materialCode" class="block text-sm font-medium text-gray-700 mb-1">Código do Material</label>
+                    <input type="text" id="materialCode" placeholder="Ex: ML001" class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 shadow-sm">
+                </div>
+                <!-- Input field for Material Name -->
+                <div>
+                    <label for="materialName" class="block text-sm font-medium text-gray-700 mb-1">Nome do Material</label>
+                    <input type="text" id="materialName" placeholder="Ex: Detergente Líquido" class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 shadow-sm">
+                </div>
+                <!-- Input field for Unit of Measure -->
+                <div>
+                    <label for="materialUnit" class="block text-sm font-medium text-gray-700 mb-1">Unidade de Medida</label>
+                    <input type="text" id="materialUnit" placeholder="Ex: Litro" class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 shadow-sm">
+                </div>
+                <!-- Input field for Minimum Stock -->
+                <div>
+                    <label for="minStock" class="block text-sm font-medium text-gray-700 mb-1">Estoque Mínimo</label>
+                    <input type="number" id="minStock" value="1" min="0" class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 shadow-sm">
+                </div>
+                <!-- Input field for Unit Price -->
+                <div>
+                    <label for="unitPrice" class="block text-sm font-medium text-gray-700 mb-1">Preço Unitário (R$)</label>
+                    <input type="number" id="unitPrice" value="0.00" min="0" step="0.01" class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 shadow-sm">
+                </div>
+            </div>
+            <!-- Button to add the new material -->
+            <button id="addMaterialBtn" class="w-full md:w-auto px-6 py-3 bg-blue-600 text-white font-semibold rounded-md shadow-lg hover:bg-blue-700 transition duration-300 ease-in-out transform hover:scale-105">
+                Adicionar Material
+            </button>
+        </div>
+
+        <!-- Section for current stock display -->
+        <div class="mb-8 p-6 bg-green-50 rounded-lg border border-green-200 shadow-md">
+            <h2 class="text-2xl font-semibold text-green-700 mb-4">Estoque Atual</h2>
+            <div class="overflow-x-auto rounded-lg border border-green-300 shadow-inner">
+                <table class="min-w-full divide-y divide-green-200">
+                    <thead class="bg-green-100">
+                        <tr>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-green-700 uppercase tracking-wider rounded-tl-lg">Código</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-green-700 uppercase tracking-wider">Nome</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-green-700 uppercase tracking-wider">Unidade</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-green-700 uppercase tracking-wider">Estoque Atual</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-green-700 uppercase tracking-wider">Estoque Mín.</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-green-700 uppercase tracking-wider">Preço Unit.</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-green-700 uppercase tracking-wider">Valor Total</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-green-700 uppercase tracking-wider rounded-tr-lg">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventoryTableBody" class="bg-white divide-y divide-green-100">
+                        <!-- Inventory items will be rendered here by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Modal for messages (replaces alert()) -->
+    <div id="customModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full border border-gray-200">
+            <h3 id="modalTitle" class="text-xl font-semibold text-gray-800 mb-4"></h3>
+            <p id="modalMessage" class="text-gray-700 mb-6"></p>
+            <button id="modalCloseBtn" class="w-full px-4 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition duration-300 ease-in-out">
+                Ok
+            </button>
+        </div>
+    </div>
+
+    <script type="module">
+        // Global variables for Firebase configuration, if persistence were to be added later.
+        // For now, no Firebase persistence is implemented as it was not explicitly requested.
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // Array to store inventory items
+        let inventory = [];
+
+        // Get references to HTML elements
+        const materialCodeInput = document.getElementById('materialCode');
+        const materialNameInput = document.getElementById('materialName');
+        const materialUnitInput = document.getElementById('materialUnit');
+        const minStockInput = document.getElementById('minStock');
+        const unitPriceInput = document.getElementById('unitPrice');
+        const addMaterialBtn = document.getElementById('addMaterialBtn');
+        const inventoryTableBody = document.getElementById('inventoryTableBody');
+
+        // Modal elements
+        const customModal = document.getElementById('customModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMessage = document.getElementById('modalMessage');
+        const modalCloseBtn = document.getElementById('modalCloseBtn');
+
+        /**
+         * Displays a custom modal message.
+         * @param {string} title - The title of the modal.
+         * @param {string} message - The message content.
+         */
+        function showModal(title, message) {
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            customModal.classList.remove('hidden');
+        }
+
+        /**
+         * Hides the custom modal.
+         */
+        function hideModal() {
+            customModal.classList.add('hidden');
+        }
+
+        // Event listener for closing the modal
+        modalCloseBtn.addEventListener('click', hideModal);
+
+        /**
+         * Renders (or re-renders) the inventory table based on the 'inventory' array.
+         * Applies conditional styling for low stock items.
+         */
+        function renderTable() {
+            inventoryTableBody.innerHTML = ''; // Clear existing rows
+
+            if (inventory.length === 0) {
+                // Display a message if the inventory is empty
+                const row = document.createElement('tr');
+                row.innerHTML = `<td colspan="8" class="px-4 py-4 text-center text-gray-500">Nenhum material cadastrado. Adicione um novo!</td>`;
+                inventoryTableBody.appendChild(row);
+                return;
+            }
+
+            inventory.forEach((item, index) => {
+                const row = document.createElement('tr');
+                // Apply background color for low stock items
+                if (item.currentStock <= item.minStock) {
+                    row.classList.add('bg-red-100', 'hover:bg-red-200'); /* Light red for low stock */
+                } else {
+                    row.classList.add('hover:bg-gray-50'); /* Normal hover state */
+                }
+
+                // Calculate total value
+                const totalValue = (item.currentStock * item.unitPrice).toFixed(2);
+
+                row.innerHTML = `
+                    <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 rounded-bl-lg">${item.code}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">${item.name}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">${item.unit}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700 font-bold">${item.currentStock}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">${item.minStock}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">R$ ${item.unitPrice.toFixed(2).replace('.', ',')}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700 font-semibold">R$ ${totalValue.replace('.', ',')}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm font-medium rounded-br-lg">
+                        <div class="flex space-x-2">
+                            <!-- Button to increase stock -->
+                            <button data-index="${index}" data-action="increase" class="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600 transition duration-200 ease-in-out shadow-sm text-xs">
+                                +
+                            </button>
+                            <!-- Button to decrease stock -->
+                            <button data-index="${index}" data-action="decrease" class="px-3 py-1 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition duration-200 ease-in-out shadow-sm text-xs">
+                                -
+                            </button>
+                            <!-- Button to remove item -->
+                            <button data-index="${index}" data-action="remove" class="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition duration-200 ease-in-out shadow-sm text-xs">
+                                Remover
+                            </button>
+                        </div>
+                    </td>
+                `;
+                inventoryTableBody.appendChild(row);
+            });
+
+            // Add event listeners for the new buttons
+            document.querySelectorAll('button[data-action]').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const index = parseInt(event.target.dataset.index);
+                    const action = event.target.dataset.action;
+                    if (action === 'increase') {
+                        updateStock(index, 1);
+                    } else if (action === 'decrease') {
+                        updateStock(index, -1);
+                    } else if (action === 'remove') {
+                        removeItem(index);
+                    }
+                });
+            });
+        }
+
+        /**
+         * Adds a new material to the inventory.
+         */
+        function addMaterial() {
+            const code = materialCodeInput.value.trim();
+            const name = materialNameInput.value.trim();
+            const unit = materialUnitInput.value.trim();
+            const minStock = parseInt(minStockInput.value);
+            const unitPrice = parseFloat(unitPriceInput.value);
+
+            // Basic input validation
+            if (!code || !name || !unit || isNaN(minStock) || isNaN(unitPrice) || minStock < 0 || unitPrice < 0) {
+                showModal('Erro de Validação', 'Por favor, preencha todos os campos corretamente e garanta que os valores numéricos sejam válidos.');
+                return;
+            }
+
+            // Check for duplicate codes
+            if (inventory.some(item => item.code === code)) {
+                showModal('Material Duplicado', `O material com o código "${code}" já existe no estoque.`);
+                return;
+            }
+
+            // Add new item to the inventory array
+            inventory.push({
+                code: code,
+                name: name,
+                unit: unit,
+                currentStock: 0, // New items start with 0 stock
+                minStock: minStock,
+                unitPrice: unitPrice
+            });
+
+            // Clear input fields after adding
+            materialCodeInput.value = '';
+            materialNameInput.value = '';
+            materialUnitInput.value = '';
+            minStockInput.value = '1';
+            unitPriceInput.value = '0.00';
+
+            renderTable(); // Re-render the table
+            showModal('Sucesso!', `"${name}" foi adicionado ao estoque. Lembre-se de atualizar o estoque atual.`);
+        }
+
+        /**
+         * Updates the current stock of an item.
+         * @param {number} index - The index of the item in the inventory array.
+         * @param {number} change - The amount to change the stock by (e.g., 1 for increase, -1 for decrease).
+         */
+        function updateStock(index, change) {
+            if (index >= 0 && index < inventory.length) {
+                const item = inventory[index];
+                const newStock = item.currentStock + change;
+
+                // Prevent negative stock
+                if (newStock < 0) {
+                    showModal('Erro de Estoque', `O estoque de "${item.name}" não pode ser negativo.`);
+                    return;
+                }
+                item.currentStock = newStock;
+                renderTable(); // Re-render the table to reflect changes
+            }
+        }
+
+        /**
+         * Removes an item from the inventory.
+         * @param {number} index - The index of the item to remove.
+         */
+        function removeItem(index) {
+            if (index >= 0 && index < inventory.length) {
+                const removedItemName = inventory[index].name;
+                inventory.splice(index, 1); // Remove item from array
+                renderTable(); // Re-render the table
+                showModal('Material Removido', `"${removedItemName}" foi removido do estoque.`);
+            }
+        }
+
+        // Add event listener to the "Adicionar Material" button
+        addMaterialBtn.addEventListener('click', addMaterial);
+
+        // Initial render when the page loads
+        document.addEventListener('DOMContentLoaded', renderTable);
+    </script>
+</body>
+</html>
